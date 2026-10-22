@@ -238,138 +238,163 @@
   </main>
 
   <script>
-    "use strict";
+"use strict";
 
-    const valorInput = document.getElementById("valor");
-    const origemSelect = document.getElementById("origem");
-    const destinoSelect = document.getElementById("destino");
-    const botao = document.getElementById("converter");
-    const trocar = document.getElementById("trocar");
-    const resultado = document.getElementById("valorConvertido");
-    const status = document.getElementById("status");
+const valorInput = document.getElementById("valor");
+const origemSelect = document.getElementById("origem");
+const destinoSelect = document.getElementById("destino");
+const botao = document.getElementById("converter");
+const trocar = document.getElementById("trocar");
+const resultado = document.getElementById("valorConvertido");
+const status = document.getElementById("status");
 
-    const API = "https://api.frankfurter.dev/v2";
-    let requisicaoAtual = 0;
+const API = "https://api.frankfurter.dev/v2";
+let requisicaoAtual = 0;
 
-    function formatarMoeda(valor, moeda) {
-      return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: moeda
-      }).format(valor);
-    }
+function formatarMoeda(valor, moeda) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: moeda
+  }).format(valor);
+}
 
-    async function converterMoeda() {
-      const id = ++requisicaoAtual;
-      const texto = valorInput.value.trim();
-      const quantia = Number(texto);
-      const origem = origemSelect.value;
-      const destino = destinoSelect.value;
+async function converterMoeda() {
+  const id = ++requisicaoAtual;
+  const texto = valorInput.value.trim();
+  const quantia = Number(texto);
+  const origem = origemSelect.value;
+  const destino = destinoSelect.value;
 
-      resultado.textContent = "---";
+  resultado.textContent = "---";
 
-      if (
-        texto === "" ||
-        !Number.isFinite(quantia) ||
-        quantia < 0
-      ) {
-        status.textContent =
-          "Digite um valor válido e não negativo.";
-        return;
-      }
+  if (texto === "" || !Number.isFinite(quantia) || quantia < 0) {
+    status.textContent = "Digite um valor válido e não negativo.";
+    botao.disabled = false;
+    trocar.disabled = false;
+    return;
+  }
 
-      if (!origem || !destino) {
-        status.textContent = "Selecione as duas moedas.";
-        return;
-      }
+  if (!origem || !destino) {
+    status.textContent = "Selecione as duas moedas.";
+    return;
+  }
 
-      if (quantia === 0 || origem === destino) {
-        resultado.textContent = formatarMoeda(
-          origem === destino ? quantia : 0,
-          destino
-        );
-        status.textContent =
-          "Conversão concluída.";
-        return;
-      }
+  if (origem === destino || quantia === 0) {
+    resultado.textContent = formatarMoeda(
+      quantia,
+      destino
+    );
+    status.textContent = "Conversão concluída.";
+    botao.disabled = false;
+    trocar.disabled = false;
+    return;
+  }
 
-      botao.disabled = true;
-      trocar.disabled = true;
-      status.textContent = "Consultando cotação...";
-      
-      try {
-        const url =
-          `${API}/rate/${encodeURIComponent(origem)}/` +
-          `${encodeURIComponent(destino)}`;
+  botao.disabled = true;
+  trocar.disabled = true;
+  status.textContent = "Consultando cotação...";
 
-        const resposta = await fetch(url, {
-          signal: AbortSignal.timeout(12000)
-        });
+  try {
+    const url = `${API}/rate/${origem}/${destino}`;
 
-        if (!resposta.ok) {
-          throw new Error("Cotação indisponível.");
-        }
-
-        const dados = await resposta.json();
-
-        if (
-          typeof dados.rate !== "number" ||
-          !Number.isFinite(dados.rate) ||
-          dados.rate <= 0
-        ) {
-          throw new Error("Taxa de câmbio inválida.");
-        }
-
-        if (id !== requisicaoAtual) return;
-
-        const convertido = quantia * dados.rate;
-
-        if (!Number.isFinite(convertido)) {
-          throw new Error("Valor fora do limite permitido.");
-        }
-
-        resultado.textContent =
-          formatarMoeda(convertido, destino);
-
-        status.textContent =
-          `1 ${origem} = ${dados.rate} ${destino}. ` +
-          `Data da cotação: ${dados.date}.`;
-
-      } catch (erro) {
-        if (id !== requisicaoAtual) return;
-
-        resultado.textContent = "---";
-        status.textContent =
-          erro.name === "TimeoutError"
-            ? "A consulta demorou demais. Tente novamente."
-            : "Não foi possível obter a cotação. " +
-              "Verifique a internet e tente novamente.";
-
-        console.error("Erro na conversão:", erro);
-
-      } finally {
-        if (id === requisicaoAtual) {
-          botao.disabled = false;
-          trocar.disabled = false;
-        }
-      }
-    }
-
-    botao.addEventListener("click", converterMoeda);
-
-    trocar.addEventListener("click", () => {
-      const moedaTemporaria = origemSelect.value;
-      origemSelect.value = destinoSelect.value;
-      destinoSelect.value = moedaTemporaria;
-      converterMoeda();
+    const resposta = await fetch(url, {
+      signal: AbortSignal.timeout(12000)
     });
 
-    valorInput.addEventListener("keydown", (evento) => {
-      if (evento.key === "Enter") {
-        converterMoeda();
-      }
-    });
+    if (!resposta.ok) {
+      throw new Error("Cotação indisponível.");
+    }
 
+    const dados = await resposta.json();
+
+    if (id !== requisicaoAtual) return;
+
+    if (
+      typeof dados.rate !== "number" ||
+      !Number.isFinite(dados.rate) ||
+      dados.rate <= 0
+    ) {
+      throw new Error("Taxa de câmbio inválida.");
+    }
+
+    // Confere se a API retornou as moedas na ordem solicitada.
+    let taxa = dados.rate;
+
+    if (
+      dados.base &&
+      dados.quote &&
+      dados.base !== origem &&
+      dados.base === destino &&
+      dados.quote === origem
+    ) {
+      taxa = 1 / dados.rate;
+    } else if (
+      (dados.base && dados.base !== origem) ||
+      (dados.quote && dados.quote !== destino)
+    ) {
+      throw new Error("A API retornou moedas diferentes.");
+    }
+
+    // A taxa é expressa em moeda de destino por unidade de origem.
+    const convertido = quantia * taxa;
+
+    if (!Number.isFinite(convertido)) {
+      throw new Error("Valor fora do limite permitido.");
+    }
+
+    resultado.textContent = formatarMoeda(
+      convertido,
+      destino
+    );
+
+    status.textContent =
+      `1 ${origem} = ${taxa} ${destino}. ` +
+      `Data da cotação: ${dados.date || "não informada"}.`;
+
+  } catch (erro) {
+    if (id !== requisicaoAtual) return;
+
+    resultado.textContent = "---";
+
+    status.textContent =
+      erro.name === "TimeoutError"
+        ? "A consulta demorou demais. Tente novamente."
+        : "Não foi possível obter a cotação. " +
+          "Verifique a internet e tente novamente.";
+
+    console.error("Erro na conversão:", erro);
+
+  } finally {
+    if (id === requisicaoAtual) {
+      botao.disabled = false;
+      trocar.disabled = false;
+    }
+  }
+}
+
+botao.addEventListener("click", converterMoeda);
+
+trocar.addEventListener("click", () => {
+  const moedaTemporaria = origemSelect.value;
+
+  origemSelect.value = destinoSelect.value;
+  destinoSelect.value = moedaTemporaria;
+
+  converterMoeda();
+});
+
+valorInput.addEventListener("keydown", evento => {
+  if (evento.key === "Enter") {
     converterMoeda();
-  </script>
+  }
+});
+
+origemSelect.addEventListener("change", converterMoeda);
+destinoSelect.addEventListener("change", converterMoeda);
+
+converterMoeda();
+</script>
+
+
 </body>
 </html>
