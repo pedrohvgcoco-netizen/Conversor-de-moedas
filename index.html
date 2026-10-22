@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversor de Moedas</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      color: #f8fafc;
+      background: linear-gradient(135deg, #101827, #164e43);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      padding: 28px;
+      background: #1e293b;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px #0004;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 27px;
+    }
+
+    .descricao {
+      margin: 0 0 25px;
+      text-align: center;
+      color: #cbd5e1;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 8px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      min-width: 0;
+      padding: 13px;
+      color: white;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid #34d399;
+      outline-offset: 2px;
+    }
+
+    .linha-moedas {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+      gap: 8px;
+      align-items: end;
+    }
+
+    .trocar {
+      height: 44px;
+      border: 0;
+      border-radius: 10px;
+      background: #334155;
+      color: white;
+      font-size: 23px;
+      cursor: pointer;
+    }
+
+    .converter {
+      width: 100%;
+      margin-top: 24px;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #34d399;
+      color: #052e24;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .resultado {
+      margin-top: 22px;
+      padding: 20px 12px;
+      text-align: center;
+      background: #0f172a;
+      border-radius: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .resultado p {
+      margin: 0 0 10px;
+      color: #cbd5e1;
+    }
+
+    #valorConvertido {
+      color: #34d399;
+      font-size: clamp(22px, 6vw, 30px);
+      font-weight: bold;
+    }
+
+    #status {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 360px) {
+      .container {
+        padding: 18px;
+      }
+
+      .linha-moedas {
+        grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+        gap: 5px;
+      }
+
+      input, select {
+        padding: 10px 6px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>💱 Conversor de Moedas</h1>
+    <p class="descricao">Conversão com taxas de câmbio online</p>
+
+    <label for="valor">Valor</label>
+    <input
+      type="number"
+      id="valor"
+      min="0"
+      step="any"
+      value="100"
+      placeholder="Digite o valor"
+    >
+
+    <div class="linha-moedas">
+      <div>
+        <label for="origem">De</label>
+        <select id="origem">
+          <option value="BRL">BRL - Real</option>
+          <option value="USD">USD - Dólar</option>
+          <option value="EUR">EUR - Euro</option>
+          <option value="GBP">GBP - Libra</option>
+          <option value="JPY">JPY - Iene</option>
+          <option value="CAD">CAD - Dólar canadense</option>
+          <option value="AUD">AUD - Dólar australiano</option>
+          <option value="CHF">CHF - Franco suíço</option>
+          <option value="ARS">ARS - Peso argentino</option>
+          <option value="CLP">CLP - Peso chileno</option>
+          <option value="MXN">MXN - Peso mexicano</option>
+          <option value="CNY">CNY - Yuan chinês</option>
+          <option value="INR">INR - Rupia indiana</option>
+          <option value="KRW">KRW - Won sul-coreano</option>
+          <option value="ZAR">ZAR - Rand sul-africano</option>
+          <option value="NZD">NZD - Dólar neozelandês</option>
+          <option value="SGD">SGD - Dólar de Singapura</option>
+          <option value="SEK">SEK - Coroa sueca</option>
+          <option value="NOK">NOK - Coroa norueguesa</option>
+          <option value="TRY">TRY - Lira turca</option>
+        </select>
+      </div>
+
+      <button
+        class="trocar"
+        id="trocar"
+        type="button"
+        aria-label="Inverter moedas"
+        title="Inverter moedas"
+      >⇄</button>
+
+      <div>
+        <label for="destino">Para</label>
+        <select id="destino">
+          <option value="USD">USD - Dólar</option>
+          <option value="BRL">BRL - Real</option>
+          <option value="EUR">EUR - Euro</option>
+          <option value="GBP">GBP - Libra</option>
+          <option value="JPY">JPY - Iene</option>
+          <option value="CAD">CAD - Dólar canadense</option>
+          <option value="AUD">AUD - Dólar australiano</option>
+          <option value="CHF">CHF - Franco suíço</option>
+          <option value="ARS">ARS - Peso argentino</option>
+          <option value="CLP">CLP - Peso chileno</option>
+          <option value="MXN">MXN - Peso mexicano</option>
+          <option value="CNY">CNY - Yuan chinês</option>
+          <option value="INR">INR - Rupia indiana</option>
+          <option value="KRW">KRW - Won sul-coreano</option>
+          <option value="ZAR">ZAR - Rand sul-africano</option>
+          <option value="NZD">NZD - Dólar neozelandês</option>
+          <option value="SGD">SGD - Dólar de Singapura</option>
+          <option value="SEK">SEK - Coroa sueca</option>
+          <option value="NOK">NOK - Coroa norueguesa</option>
+          <option value="TRY">TRY - Lira turca</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="converter" id="converter" type="button">
+      Converter agora
+    </button>
+
+    <section class="resultado" aria-live="polite">
+      <p>Valor convertido</p>
+      <div id="valorConvertido">---</div>
+    </section>
+
+    <div id="status" role="status">
+      Pronto para converter.
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+
+    const valorInput = document.getElementById("valor");
+    const origemSelect = document.getElementById("origem");
+    const destinoSelect = document.getElementById("destino");
+    const botao = document.getElementById("converter");
+    const trocar = document.getElementById("trocar");
+    const resultado = document.getElementById("valorConvertido");
+    const status = document.getElementById("status");
+
+    const API = "https://api.frankfurter.dev/v2";
+    let requisicaoAtual = 0;
+
+    function formatarMoeda(valor, moeda) {
+      return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: moeda
+      }).format(valor);
+    }
+
+    async function converterMoeda() {
+      const id = ++requisicaoAtual;
+      const texto = valorInput.value.trim();
+      const quantia = Number(texto);
+      const origem = origemSelect.value;
+      const destino = destinoSelect.value;
+
+      resultado.textContent = "---";
+
+      if (
+        texto === "" ||
+        !Number.isFinite(quantia) ||
+        quantia < 0
+      ) {
+        status.textContent =
+          "Digite um valor válido e não negativo.";
+        return;
+      }
+
+      if (!origem || !destino) {
+        status.textContent = "Selecione as duas moedas.";
+        return;
+      }
+
+      if (quantia === 0 || origem === destino) {
+        resultado.textContent = formatarMoeda(
+          origem === destino ? quantia : 0,
+          destino
+        );
+        status.textContent =
+          "Conversão concluída.";
+        return;
+      }
+
+      botao.disabled = true;
+      trocar.disabled = true;
+      status.textContent = "Consultando cotação...";
+      
+      try {
+        const url =
+          `${API}/rate/${encodeURIComponent(origem)}/` +
+          `${encodeURIComponent(destino)}`;
+
+        const resposta = await fetch(url, {
+          signal: AbortSignal.timeout(12000)
+        });
+
+        if (!resposta.ok) {
+          throw new Error("Cotação indisponível.");
+        }
+
+        const dados = await resposta.json();
+
+        if (
+          typeof dados.rate !== "number" ||
+          !Number.isFinite(dados.rate) ||
+          dados.rate <= 0
+        ) {
+          throw new Error("Taxa de câmbio inválida.");
+        }
+
+        if (id !== requisicaoAtual) return;
+
+        const convertido = quantia * dados.rate;
+
+        if (!Number.isFinite(convertido)) {
+          throw new Error("Valor fora do limite permitido.");
+        }
+
+        resultado.textContent =
+          formatarMoeda(convertido, destino);
+
+        status.textContent =
+          `1 ${origem} = ${dados.rate} ${destino}. ` +
+          `Data da cotação: ${dados.date}.`;
+
+      } catch (erro) {
+        if (id !== requisicaoAtual) return;
+
+        resultado.textContent = "---";
+        status.textContent =
+          erro.name === "TimeoutError"
+            ? "A consulta demorou demais. Tente novamente."
+            : "Não foi possível obter a cotação. " +
+              "Verifique a internet e tente novamente.";
+
+        console.error("Erro na conversão:", erro);
+
+      } finally {
+        if (id === requisicaoAtual) {
+          botao.disabled = false;
+          trocar.disabled = false;
+        }
+      }
+    }
+
+    botao.addEventListener("click", converterMoeda);
+
+    trocar.addEventListener("click", () => {
+      const moedaTemporaria = origemSelect.value;
+      origemSelect.value = destinoSelect.value;
+      destinoSelect.value = moedaTemporaria;
+      converterMoeda();
+    });
+
+    valorInput.addEventListener("keydown", (evento) => {
+      if (evento.key === "Enter") {
+        converterMoeda();
+      }
+    });
+
+    converterMoeda();
+  </script>
+</body>
+</html>
